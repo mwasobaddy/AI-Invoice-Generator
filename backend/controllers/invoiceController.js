@@ -23,54 +23,18 @@ exports.createInvoice = async (req, res) => {
             invoiceNumber,
             invoiceDate,
             dueDate,
-            billFrom,
-            billTo,
+            billingFrom,
+            billingTo,
             items,
             notes,
             paymentTerms,
             status,
+            subTotal,
+            taxTotal,
+            total,
         } = req.body;
         
-        // Transform frontend data to match backend schema
-        const billingFrom = {
-            businessName: billFrom?.businessName || '',
-            address: billFrom?.address || '',
-            email: billFrom?.email || '',
-            phone: billFrom?.phone || ''
-        };
-        
-        const billingTo = {
-            clientName: billTo?.clientName || '',
-            address: billTo?.clientAddress || '',
-            email: billTo?.clientEmail || '',
-            phone: billTo?.clientPhone || ''
-        };
-        
-        // Transform items and calculate totals
-        let subTotal = 0;
-        let taxTotal = 0;
-        const transformedItems = items.map(item => {
-            const unitPrice = Number(item.price) || 0;
-            const quantity = Number(item.quantity) || 0;
-            const taxPercent = Number(item.tax) || 0;
-            const itemSubtotal = quantity * unitPrice;
-            const itemTax = (itemSubtotal * taxPercent) / 100;
-            const itemTotal = itemSubtotal + itemTax;
-            
-            subTotal += itemSubtotal;
-            taxTotal += itemTax;
-            
-            return {
-                name: item.name,
-                quantity: quantity,
-                unitPrice: unitPrice,
-                taxPercent: taxPercent,
-                total: itemTotal
-            };
-        });
-        
-        const total = subTotal + taxTotal;
-
+        // Data is already transformed by frontend, use directly
         const newInvoice = new Invoice({
             user: user._id,
             invoiceNumber,
@@ -78,12 +42,13 @@ exports.createInvoice = async (req, res) => {
             dueDate,
             billingFrom,
             billingTo,
-            items: transformedItems,
+            items,
             notes,
             paymentTerms,
             subTotal,
             taxTotal,
             total,
+            status: status || 'unpaid',
         });
 
         const savedInvoice = await newInvoice.save();
