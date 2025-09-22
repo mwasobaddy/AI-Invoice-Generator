@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
-const Signup = () => {
+const SignUp = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -191,4 +191,4 @@ const Signup = () => {
   )
 }
 
-export default Signup
+export default SignUp
