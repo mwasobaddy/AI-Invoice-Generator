@@ -53,13 +53,13 @@ const invoiceSchema = new mongoose.Schema({
         businessName: { type: String, required: true }, 
         address: { type: String, required: true },
         email: { type: String, required: true },
-        phone: { type: String, required: true }
+        phone: { type: String, default: '' }
     },
     billingTo: {
         clientName: { type: String, required: true },
         address: { type: String, required: true },
         email: { type: String, required: true },
-        phone: { type: String, required: true }
+        phone: { type: String, default: '' }
     },
     items: [itemSchema],
     notes: {

@@ -1,3 +1,5 @@
+const Invoice = require('../models/Invoice');
+
 // @desc    Check if invoice number exists
 // @route   GET /api/invoices/exists/:invoiceNumber
 // @access  Public (for form validation)
@@ -10,7 +12,6 @@ exports.checkInvoiceNumberExists = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
-const Invoice = require('../models/Invoice');
 
 // @desc    Create new invoice
 // @route   POST /api/invoices
@@ -88,8 +89,26 @@ exports.createInvoice = async (req, res) => {
         const savedInvoice = await newInvoice.save();
         res.status(201).json(savedInvoice);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error creating invoice:', error);
+        console.error('Request body:', req.body);
+        
+        // Handle validation errors
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({ 
+                message: 'Validation error',
+                errors: errors 
+            });
+        }
+        
+        // Handle duplicate key error
+        if (error.code === 11000) {
+            return res.status(400).json({ 
+                message: 'Invoice number already exists' 
+            });
+        }
+        
+        res.status(500).json({ message: 'Server error while creating invoice' });
     }
 };
 
