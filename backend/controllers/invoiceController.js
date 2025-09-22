@@ -23,18 +23,54 @@ exports.createInvoice = async (req, res) => {
             invoiceNumber,
             invoiceDate,
             dueDate,
-            billingFrom,
-            billingTo,
+            billFrom,
+            billTo,
             items,
             notes,
             paymentTerms,
             status,
-            subTotal,
-            taxTotal,
-            total,
         } = req.body;
         
-        // Data is already transformed by frontend, use directly
+        // Transform frontend data to match backend schema
+        const billingFrom = {
+            businessName: billFrom?.businessName || '',
+            address: billFrom?.address || '',
+            email: billFrom?.email || '',
+            phone: billFrom?.phone || ''
+        };
+        
+        const billingTo = {
+            clientName: billTo?.clientName || '',
+            address: billTo?.clientAddress || '',
+            email: billTo?.clientEmail || '',
+            phone: billTo?.clientPhone || ''
+        };
+        
+        // Transform items and calculate totals
+        let subTotal = 0;
+        let taxTotal = 0;
+        const transformedItems = items.map(item => {
+            const unitPrice = Number(item.price) || 0;
+            const quantity = Number(item.quantity) || 0;
+            const taxPercent = Number(item.tax) || 0;
+            const itemSubtotal = quantity * unitPrice;
+            const itemTax = (itemSubtotal * taxPercent) / 100;
+            const itemTotal = itemSubtotal + itemTax;
+            
+            subTotal += itemSubtotal;
+            taxTotal += itemTax;
+            
+            return {
+                name: item.name,
+                quantity: quantity,
+                unitPrice: unitPrice,
+                taxPercent: taxPercent,
+                total: itemTotal
+            };
+        });
+        
+        const total = subTotal + taxTotal;
+
         const newInvoice = new Invoice({
             user: user._id,
             invoiceNumber,
@@ -42,13 +78,12 @@ exports.createInvoice = async (req, res) => {
             dueDate,
             billingFrom,
             billingTo,
-            items,
+            items: transformedItems,
             notes,
             paymentTerms,
             subTotal,
             taxTotal,
             total,
-            status: status || 'unpaid',
         });
 
         const savedInvoice = await newInvoice.save();
@@ -73,7 +108,13 @@ exports.createInvoice = async (req, res) => {
             });
         }
         
-        res.status(500).json({ message: 'Server error while creating invoice' });
+        // Respond with detailed error message and request body for debugging
+        res.status(500).json({
+            message: 'Server error while creating invoice',
+            error: error.message,
+            stack: error.stack,
+            requestBody: req.body
+        });
     }
 };
 
