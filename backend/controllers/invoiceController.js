@@ -18,58 +18,76 @@ exports.checkInvoiceNumberExists = async (req, res) => {
 // @access  Private
 exports.createInvoice = async (req, res) => {
     try {
+        // Ensure authenticated user exists (serverless cold starts can sometimes drop context)
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+
         const user = req.user;
         const {
             invoiceNumber,
             invoiceDate,
             dueDate,
+            billingFrom: billingFromBody,
+            billingTo: billingToBody,
             billFrom,
             billTo,
-            items,
-            notes,
-            paymentTerms,
-            status,
+            items = [],
+            notes = '',
+            paymentTerms = '',
+            status = 'unpaid',
+            subTotal: subTotalBody,
+            taxTotal: taxTotalBody,
+            total: totalBody,
         } = req.body;
-        
-        // Transform frontend data to match backend schema
-        const billingFrom = {
+
+        // Normalize billingFrom/billingTo shape (support both old and new frontend payloads)
+        const billingFrom = billingFromBody ?? {
             businessName: billFrom?.businessName || '',
             address: billFrom?.address || '',
             email: billFrom?.email || '',
             phone: billFrom?.phone || ''
         };
-        
-        const billingTo = {
+
+        const billingTo = billingToBody ?? {
             clientName: billTo?.clientName || '',
             address: billTo?.clientAddress || '',
             email: billTo?.clientEmail || '',
             phone: billTo?.clientPhone || ''
         };
-        
-        // Transform items and calculate totals
-        let subTotal = 0;
-        let taxTotal = 0;
-        const transformedItems = items.map(item => {
-            const unitPrice = Number(item.price) || 0;
+
+        // Normalize items (support {unitPrice,taxPercent} or {price,tax}) and compute totals if not provided
+        let computedSubTotal = 0;
+        let computedTaxTotal = 0;
+
+        const normalizedItems = (items || []).map((item) => {
             const quantity = Number(item.quantity) || 0;
-            const taxPercent = Number(item.tax) || 0;
+            // Prefer unitPrice/taxPercent if present, otherwise fallback to price/tax
+            const unitPrice =
+                item.unitPrice != null ? Number(item.unitPrice) : Number(item.price) || 0;
+            const taxPercent =
+                item.taxPercent != null ? Number(item.taxPercent) : Number(item.tax) || 0;
+
             const itemSubtotal = quantity * unitPrice;
             const itemTax = (itemSubtotal * taxPercent) / 100;
-            const itemTotal = itemSubtotal + itemTax;
-            
-            subTotal += itemSubtotal;
-            taxTotal += itemTax;
-            
+            const itemTotal =
+                item.total != null ? Number(item.total) : itemSubtotal + itemTax;
+
+            computedSubTotal += itemSubtotal;
+            computedTaxTotal += itemTax;
+
             return {
                 name: item.name,
-                quantity: quantity,
-                unitPrice: unitPrice,
-                taxPercent: taxPercent,
-                total: itemTotal
+                quantity,
+                unitPrice,
+                taxPercent,
+                total: itemTotal,
             };
         });
-        
-        const total = subTotal + taxTotal;
+
+        const subTotal = subTotalBody != null ? Number(subTotalBody) : computedSubTotal;
+        const taxTotal = taxTotalBody != null ? Number(taxTotalBody) : computedTaxTotal;
+        const total = totalBody != null ? Number(totalBody) : subTotal + taxTotal;
 
         const newInvoice = new Invoice({
             user: user._id,
@@ -78,9 +96,10 @@ exports.createInvoice = async (req, res) => {
             dueDate,
             billingFrom,
             billingTo,
-            items: transformedItems,
+            items: normalizedItems,
             notes,
             paymentTerms,
+            status,
             subTotal,
             taxTotal,
             total,
@@ -91,29 +110,24 @@ exports.createInvoice = async (req, res) => {
     } catch (error) {
         console.error('Error creating invoice:', error);
         console.error('Request body:', req.body);
-        
+
         // Handle validation errors
         if (error.name === 'ValidationError') {
-            const errors = Object.values(error.errors).map(err => err.message);
-            return res.status(400).json({ 
-                message: 'Validation error',
-                errors: errors 
-            });
+            const errors = Object.values(error.errors).map((err) => err.message);
+            return res.status(400).json({ message: 'Validation error', errors });
         }
-        
+
         // Handle duplicate key error
         if (error.code === 11000) {
-            return res.status(400).json({ 
-                message: 'Invoice number already exists' 
-            });
+            return res.status(400).json({ message: 'Invoice number already exists' });
         }
-        
+
         // Respond with detailed error message and request body for debugging
         res.status(500).json({
             message: 'Server error while creating invoice',
             error: error.message,
             stack: error.stack,
-            requestBody: req.body
+            requestBody: req.body,
         });
     }
 };
@@ -173,9 +187,15 @@ exports.updateInvoice = async (req, res) => {
         let subTotal = 0;
         let taxTotal = 0;
         if (items && items.length > 0) {
-            items.forEach(item => {
-                subTotal += item.quantity * item.unitPrice;
-                taxTotal += (item.quantity * item.unitPrice * (item.taxRate || 0)) / 100;
+            items.forEach((item) => {
+                const quantity = Number(item.quantity) || 0;
+                const unitPrice =
+                    item.unitPrice != null ? Number(item.unitPrice) : Number(item.price) || 0;
+                const taxPercent =
+                    item.taxPercent != null ? Number(item.taxPercent) : Number(item.tax) || 0;
+
+                subTotal += quantity * unitPrice;
+                taxTotal += (quantity * unitPrice * taxPercent) / 100;
             });
         }
 
