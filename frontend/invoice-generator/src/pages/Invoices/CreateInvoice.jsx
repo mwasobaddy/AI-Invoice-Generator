@@ -156,7 +156,7 @@ const CreateInvoice = () => {
                 })
                 .catch((err) => {
                     console.error("Error fetching invoice:", err);
-                    setError('Failed to load invoice');
+                    toast.error('Failed to load invoice');
                 })
                 .finally(() => setLoading(false));
         }
@@ -403,7 +403,6 @@ const CreateInvoice = () => {
             }
             
             toast.error('Failed to save invoice: ' + errorMessage);
-            setError('Failed to save invoice: ' + errorMessage);
         } finally {
             setLoading(false);
         }

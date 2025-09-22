@@ -27,7 +27,6 @@ const InvoiceDetail = () => {
       setInvoice(response.data);
     } catch (error) {
       console.error('Error fetching invoice:', error);
-      setError('Failed to load invoice');
       toast.error('Failed to load invoice');
     } finally {
       setLoading(false);

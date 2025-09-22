@@ -4,6 +4,7 @@ import { API_BASE_URL, API_PATHS } from '../../utils/apiPaths';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 const SignUp = () => {
   const { login } = useAuth();
@@ -58,7 +59,7 @@ const SignUp = () => {
     e.preventDefault();
     setError(null);
     if (!isFormValid()) {
-      setError('Please fill in all fields correctly and accept the terms.');
+      toast.error('Please fill in all fields correctly and accept the terms.');
       return;
     }
     setLoading(true);
@@ -72,11 +73,11 @@ const SignUp = () => {
       const data = resp.data;
       // auto-login
       await login({ name: data.name, email: data.email }, data.token);
-      setSuccess('Account created successfully');
+      toast.success('Account created successfully');
       setTimeout(() => navigate('/dashboard'), 300);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to create account. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
     }
