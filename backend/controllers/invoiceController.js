@@ -68,19 +68,29 @@ exports.createInvoice = async (req, res) => {
 
         const billingTo = billingToBody ?? {
             clientName: billTo?.clientName || '',
-            address: billTo?.clientAddress || '',
-            email: billTo?.clientEmail || '',
-            phone: billTo?.clientPhone || ''
+            address: billTo?.clientAddress || billTo?.address || '',
+            email: billTo?.clientEmail || billTo?.email || '',
+            phone: billTo?.clientPhone || billTo?.phone || ''
         };
 
         console.log('Normalized billing info:', { billingFrom, billingTo });
 
-        // Validate billing info
-        if (!billingFrom.businessName || !billingTo.clientName) {
+        // Validate billing info - only check for required fields
+        if (!billingFrom.businessName || !billingFrom.email || !billingFrom.address) {
             return res.status(400).json({ 
-                message: 'Missing required billing information',
+                message: 'Missing required billing from information',
                 missing: {
                     businessName: !billingFrom.businessName,
+                    email: !billingFrom.email,
+                    address: !billingFrom.address
+                }
+            });
+        }
+
+        if (!billingTo.clientName) {
+            return res.status(400).json({ 
+                message: 'Missing required billing to information',
+                missing: {
                     clientName: !billingTo.clientName
                 }
             });

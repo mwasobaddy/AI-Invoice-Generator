@@ -50,16 +50,40 @@ const invoiceSchema = new mongoose.Schema({
         required: true
     },
     billingFrom: {
-        businessName: { type: String, required: true }, 
-        address: { type: String, required: true },
-        email: { type: String, required: true },
-        phone: { type: String, default: '' }
+        businessName: { 
+            type: String, 
+            required: [true, 'Business name is required'] 
+        }, 
+        address: { 
+            type: String, 
+            required: [true, 'Business address is required'] 
+        },
+        email: { 
+            type: String, 
+            required: [true, 'Business email is required'] 
+        },
+        phone: { 
+            type: String, 
+            default: '' 
+        }
     },
     billingTo: {
-        clientName: { type: String, required: true },
-        address: { type: String, required: true },
-        email: { type: String, required: true },
-        phone: { type: String, default: '' }
+        clientName: { 
+            type: String, 
+            required: [true, 'Client name is required'] 
+        },
+        address: { 
+            type: String, 
+            default: '' // Make this optional since frontend sometimes doesn't provide it
+        },
+        email: { 
+            type: String, 
+            default: '' // Make this optional since frontend sometimes doesn't provide it
+        },
+        phone: { 
+            type: String, 
+            default: '' 
+        }
     },
     items: [itemSchema],
     notes: {
