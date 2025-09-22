@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import {Toaster} from 'react-hot-toast';
 import LandingPage from './pages/LandingPage/LandingPage';
-import Signup from './pages/auth/SignUp';
+import SignUp from './pages/auth/SignUp.jsx';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import AllInvoices from './pages/Invoices/AllInvoices';
@@ -23,7 +23,7 @@ const App = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
 
           {/* Protected Routes */}
