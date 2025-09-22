@@ -9,6 +9,7 @@ exports.checkInvoiceNumberExists = async (req, res) => {
         const exists = await Invoice.exists({ invoiceNumber });
         res.json({ exists: !!exists });
     } catch (err) {
+        console.error('Check invoice exists error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 };
@@ -18,8 +19,12 @@ exports.checkInvoiceNumberExists = async (req, res) => {
 // @access  Private
 exports.createInvoice = async (req, res) => {
     try {
-        // Ensure authenticated user exists (serverless cold starts can sometimes drop context)
+        console.log('Creating invoice - User:', req.user);
+        console.log('Request body:', JSON.stringify(req.body, null, 2));
+
+        // Ensure authenticated user exists (use consistent ID format)
         if (!req.user || !req.user._id) {
+            console.log('Auth check failed:', { user: req.user });
             return res.status(401).json({ message: 'Not authorized' });
         }
 
@@ -41,6 +46,18 @@ exports.createInvoice = async (req, res) => {
             total: totalBody,
         } = req.body;
 
+        // Validate required fields
+        if (!invoiceNumber || !invoiceDate || !dueDate) {
+            return res.status(400).json({ 
+                message: 'Missing required fields', 
+                missing: {
+                    invoiceNumber: !invoiceNumber,
+                    invoiceDate: !invoiceDate,
+                    dueDate: !dueDate
+                }
+            });
+        }
+
         // Normalize billingFrom/billingTo shape (support both old and new frontend payloads)
         const billingFrom = billingFromBody ?? {
             businessName: billFrom?.businessName || '',
@@ -56,22 +73,37 @@ exports.createInvoice = async (req, res) => {
             phone: billTo?.clientPhone || ''
         };
 
-        // Normalize items (support {unitPrice,taxPercent} or {price,tax}) and compute totals if not provided
+        console.log('Normalized billing info:', { billingFrom, billingTo });
+
+        // Validate billing info
+        if (!billingFrom.businessName || !billingTo.clientName) {
+            return res.status(400).json({ 
+                message: 'Missing required billing information',
+                missing: {
+                    businessName: !billingFrom.businessName,
+                    clientName: !billingTo.clientName
+                }
+            });
+        }
+
+        // Normalize items and compute totals
         let computedSubTotal = 0;
         let computedTaxTotal = 0;
 
-        const normalizedItems = (items || []).map((item) => {
+        const normalizedItems = (items || []).map((item, index) => {
+            console.log(`Processing item ${index}:`, item);
+            
             const quantity = Number(item.quantity) || 0;
-            // Prefer unitPrice/taxPercent if present, otherwise fallback to price/tax
-            const unitPrice =
-                item.unitPrice != null ? Number(item.unitPrice) : Number(item.price) || 0;
-            const taxPercent =
-                item.taxPercent != null ? Number(item.taxPercent) : Number(item.tax) || 0;
+            const unitPrice = item.unitPrice != null ? Number(item.unitPrice) : Number(item.price) || 0;
+            const taxPercent = item.taxPercent != null ? Number(item.taxPercent) : Number(item.tax) || 0;
+
+            if (!item.name) {
+                throw new Error(`Item ${index + 1} is missing a name`);
+            }
 
             const itemSubtotal = quantity * unitPrice;
             const itemTax = (itemSubtotal * taxPercent) / 100;
-            const itemTotal =
-                item.total != null ? Number(item.total) : itemSubtotal + itemTax;
+            const itemTotal = item.total != null ? Number(item.total) : itemSubtotal + itemTax;
 
             computedSubTotal += itemSubtotal;
             computedTaxTotal += itemTax;
@@ -85,15 +117,19 @@ exports.createInvoice = async (req, res) => {
             };
         });
 
+        console.log('Normalized items:', normalizedItems);
+
         const subTotal = subTotalBody != null ? Number(subTotalBody) : computedSubTotal;
         const taxTotal = taxTotalBody != null ? Number(taxTotalBody) : computedTaxTotal;
         const total = totalBody != null ? Number(totalBody) : subTotal + taxTotal;
 
-        const newInvoice = new Invoice({
+        console.log('Calculated totals:', { subTotal, taxTotal, total });
+
+        const invoiceData = {
             user: user._id,
             invoiceNumber,
-            invoiceDate,
-            dueDate,
+            invoiceDate: new Date(invoiceDate),
+            dueDate: new Date(dueDate),
             billingFrom,
             billingTo,
             items: normalizedItems,
@@ -103,31 +139,52 @@ exports.createInvoice = async (req, res) => {
             subTotal,
             taxTotal,
             total,
-        });
+        };
 
+        console.log('Final invoice data:', JSON.stringify(invoiceData, null, 2));
+
+        const newInvoice = new Invoice(invoiceData);
         const savedInvoice = await newInvoice.save();
+        
+        console.log('Invoice saved successfully:', savedInvoice._id);
         res.status(201).json(savedInvoice);
     } catch (error) {
         console.error('Error creating invoice:', error);
-        console.error('Request body:', req.body);
+        console.error('Error stack:', error.stack);
+        console.error('Request body:', JSON.stringify(req.body, null, 2));
 
         // Handle validation errors
         if (error.name === 'ValidationError') {
             const errors = Object.values(error.errors).map((err) => err.message);
-            return res.status(400).json({ message: 'Validation error', errors });
+            return res.status(400).json({ 
+                message: 'Validation error', 
+                errors,
+                details: error.errors
+            });
         }
 
         // Handle duplicate key error
         if (error.code === 11000) {
-            return res.status(400).json({ message: 'Invoice number already exists' });
+            return res.status(400).json({ 
+                message: 'Invoice number already exists',
+                duplicateField: Object.keys(error.keyPattern)[0]
+            });
         }
 
-        // Respond with detailed error message and request body for debugging
+        // Handle custom validation errors
+        if (error.message && error.message.includes('missing')) {
+            return res.status(400).json({
+                message: error.message,
+                requestBody: req.body
+            });
+        }
+
+        // Generic server error
         res.status(500).json({
             message: 'Server error while creating invoice',
             error: error.message,
-            stack: error.stack,
-            requestBody: req.body,
+            // Only include stack trace in development
+            ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
         });
     }
 };
@@ -137,10 +194,11 @@ exports.createInvoice = async (req, res) => {
 // @access  Private
 exports.getInvoices = async (req, res) => {
     try {
-        const invoices = await Invoice.find({ user: req.user.id }).populate('user', 'name email');
+        // Use consistent ID format
+        const invoices = await Invoice.find({ user: req.user._id }).populate('user', 'name email');
         res.json(invoices);
     } catch (error) {
-        console.error(error);
+        console.error('Get invoices error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -155,13 +213,13 @@ exports.getInvoiceById = async (req, res) => {
             return res.status(404).json({ message: 'Invoice not found' });
         }
 
-        // check if the invoice belongs to the authenticated user
-        if (invoice.user._id.toString() !== req.user.id) {
+        // Check if the invoice belongs to the authenticated user (use consistent ID format)
+        if (invoice.user._id.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Not authorized to access this invoice' });
         }
         res.json(invoice);
     } catch (error) {
-        console.error(error);
+        console.error('Get invoice by ID error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -171,6 +229,9 @@ exports.getInvoiceById = async (req, res) => {
 // @access  Private
 exports.updateInvoice = async (req, res) => {
     try {
+        console.log('Updating invoice:', req.params.id);
+        console.log('Update data:', JSON.stringify(req.body, null, 2));
+
         const {
             invoiceNumber,
             invoiceDate,
@@ -183,51 +244,96 @@ exports.updateInvoice = async (req, res) => {
             status, 
         } = req.body;
 
-        // recalculate totals
+        // Find the invoice first to check ownership
+        const existingInvoice = await Invoice.findById(req.params.id);
+        if (!existingInvoice) {
+            return res.status(404).json({ message: 'Invoice not found' });
+        }
+
+        // Check ownership
+        if (existingInvoice.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to update this invoice' });
+        }
+
+        // Recalculate totals
         let subTotal = 0;
         let taxTotal = 0;
-        if (items && items.length > 0) {
-            items.forEach((item) => {
-                const quantity = Number(item.quantity) || 0;
-                const unitPrice =
-                    item.unitPrice != null ? Number(item.unitPrice) : Number(item.price) || 0;
-                const taxPercent =
-                    item.taxPercent != null ? Number(item.taxPercent) : Number(item.tax) || 0;
+        let normalizedItems = [];
 
-                subTotal += quantity * unitPrice;
-                taxTotal += (quantity * unitPrice * taxPercent) / 100;
+        if (items && items.length > 0) {
+            normalizedItems = items.map(item => {
+                const quantity = Number(item.quantity) || 0;
+                const unitPrice = item.unitPrice != null ? Number(item.unitPrice) : Number(item.price) || 0;
+                const taxPercent = item.taxPercent != null ? Number(item.taxPercent) : Number(item.tax) || 0;
+
+                const itemSubtotal = quantity * unitPrice;
+                const itemTax = (itemSubtotal * taxPercent) / 100;
+                const itemTotal = itemSubtotal + itemTax;
+
+                subTotal += itemSubtotal;
+                taxTotal += itemTax;
+
+                return {
+                    name: item.name,
+                    quantity,
+                    unitPrice,
+                    taxPercent,
+                    total: itemTotal
+                };
             });
         }
 
         const total = subTotal + taxTotal;
 
+        const updateData = {
+            invoiceNumber,
+            invoiceDate: invoiceDate ? new Date(invoiceDate) : existingInvoice.invoiceDate,
+            dueDate: dueDate ? new Date(dueDate) : existingInvoice.dueDate,
+            billingFrom: billingFrom || existingInvoice.billingFrom,
+            billingTo: billingTo || existingInvoice.billingTo,
+            items: normalizedItems,
+            notes: notes !== undefined ? notes : existingInvoice.notes,
+            paymentTerms: paymentTerms || existingInvoice.paymentTerms,
+            status: status || existingInvoice.status,
+            subTotal,
+            taxTotal,
+            total,
+        };
+
+        console.log('Final update data:', JSON.stringify(updateData, null, 2));
+
         const updatedInvoice = await Invoice.findByIdAndUpdate(
             req.params.id,
-            {
-                invoiceNumber,
-                invoiceDate,
-                dueDate,
-                billingFrom,
-                billingTo,
-                items,
-                notes,
-                paymentTerms,
-                status,
-                subTotal,
-                taxTotal,
-                total,
-            },
-            { new: true }
+            updateData,
+            { new: true, runValidators: true }
         );
 
-        if (!updatedInvoice) {
-            return res.status(404).json({ message: 'Invoice not found' });
-        }
-
+        console.log('Invoice updated successfully');
         res.json(updatedInvoice);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Update invoice error:', error);
+        console.error('Error stack:', error.stack);
+        
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map((err) => err.message);
+            return res.status(400).json({ 
+                message: 'Validation error', 
+                errors,
+                details: error.errors
+            });
+        }
+
+        if (error.code === 11000) {
+            return res.status(400).json({ 
+                message: 'Invoice number already exists',
+                duplicateField: Object.keys(error.keyPattern)[0]
+            });
+        }
+
+        res.status(500).json({ 
+            message: 'Server error while updating invoice',
+            error: error.message
+        });
     }
 };
 
@@ -236,13 +342,21 @@ exports.updateInvoice = async (req, res) => {
 // @access  Private
 exports.deleteInvoice = async (req, res) => {
     try {
-        const invoice = await Invoice.findByIdAndDelete(req.params.id);
+        const invoice = await Invoice.findById(req.params.id);
+        
         if (!invoice) {
             return res.status(404).json({ message: 'Invoice not found' });
         }
-        res.json({ message: 'Invoice deleted' });
+
+        // Check ownership
+        if (invoice.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to delete this invoice' });
+        }
+
+        await Invoice.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Invoice deleted successfully' });
     } catch (error) {
-        console.error(error);
+        console.error('Delete invoice error:', error);
         res.status(500).json({ message: 'Server error' });
     }
-}; 
+};

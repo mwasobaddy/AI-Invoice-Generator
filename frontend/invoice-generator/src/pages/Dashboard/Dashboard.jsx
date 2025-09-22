@@ -58,7 +58,9 @@ const Dashboard = () => {
                 // Fetch AI insights
                 try {
                     const aiResponse = await axiosInstance.get(API_PATHS.AI.GET_DASHBOARD_SUMMARY);
-                    setAiInsights(aiResponse.data.insights || []);
+                    const insights = aiResponse.data?.insights;
+                    // Normalize to array to avoid runtime errors when mapping
+                    setAiInsights(Array.isArray(insights) ? insights : insights ? [String(insights)] : []);
                 } catch (aiError) {
                     console.log('AI insights not available:', aiError);
                     setAiInsights(['AI insights temporarily unavailable']);
@@ -100,6 +102,9 @@ const Dashboard = () => {
         emerald: {bg: "bg-emerald-100", text: "text-emerald-800"},
         red: {bg: "bg-red-100", text: "text-red-800"},
     };
+
+    // Ensure insights is always an array for rendering
+    const normalizedInsights = Array.isArray(aiInsights) ? aiInsights : (aiInsights ? [String(aiInsights)] : []);
 
     return (
         <div className="max-w-6xl mx-auto">
@@ -145,10 +150,10 @@ const Dashboard = () => {
                     </div>
                 ) : (
                     <ul className="list-disc pl-6 space-y-1 text-gray-700">
-                        {aiInsights.length === 0 ? (
+                        {normalizedInsights.length === 0 ? (
                             <li>No insights available.</li>
                         ) : (
-                            aiInsights.map((insight, idx) => (
+                            normalizedInsights.map((insight, idx) => (
                                 <li key={idx}>{insight}</li>
                             ))
                         )}
