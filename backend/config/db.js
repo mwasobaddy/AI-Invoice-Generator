@@ -1,14 +1,28 @@
 const mongoose = require('mongoose');
 
+let isConnected = false;
+
 const connectDB = async () => {
+    if (isConnected) {
+        console.log('MongoDB already connected');
+        return;
+    }
+
     try {
-        await mongoose.connect(process.env.MONGO_URI, {
+        const conn = await mongoose.connect(process.env.MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
         });
-        console.log('MongoDB connected');
+        
+        isConnected = true;
+        console.log(`MongoDB connected: ${conn.connection.host}`);
     } catch (err) {
         console.error(`Error connecting to MongoDB: ${err.message}`);
-        process.exit(1);
+        throw err; // Don't exit process in serverless environment
     }
-}
+};
+
+// Export both the function and connection state for serverless usage
+connectDB.isConnected = () => isConnected;
 
 module.exports = connectDB;

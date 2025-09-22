@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const connectDB = require('./config/db');
 
 const authRoutes = require('./routes/authRoutes');
@@ -15,12 +14,20 @@ app.use(
     cors({
         origin: '*',
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders: ['Content-Type, Authorization'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
     })
 );
 
-// connect to database
-connectDB();
+// Connect to database before handling requests
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        console.error('Database connection failed:', error);
+        res.status(500).json({ message: 'Database connection failed' });
+    }
+});
 
 // middleware to parse json
 app.use(express.json());
@@ -30,8 +37,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/ai', aiRoutes);
 
-// start the server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Health check endpoint
+app.get('/', (req, res) => {
+    res.json({ message: 'AI Invoice Generator API is running!' });
 });
+
+// Export for serverless deployment
+module.exports = app;
