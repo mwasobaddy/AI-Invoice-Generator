@@ -5,6 +5,7 @@ import { API_BASE_URL, API_PATHS } from '../../utils/apiPaths';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 
 const Login = () => {
@@ -69,12 +70,12 @@ const Login = () => {
       const data = resp.data;
       // call context login
       await login({ name: data.name, email: data.email }, data.token);
-      setSuccess('Signed in successfully');
+      toast.success('Login successful!');
       // small delay so users can see success message (optional)
       setTimeout(() => navigate('/dashboard'), 250);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to login. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to login. Please try again.');
     } finally {
       setLoading(false);
     }
