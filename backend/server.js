@@ -12,9 +12,17 @@ const app = express();
 // middlewares to handle cors
 app.use(
     cors({
-        origin: '*',
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        origin: [
+            'http://localhost:5173',
+            'http://localhost:3000',
+            'https://ai-invoice-generator-ddxr.vercel.app',
+            'https://*.vercel.app'
+        ],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+        credentials: true,
+        preflightContinue: false,
+        optionsSuccessStatus: 200
     })
 );
 
