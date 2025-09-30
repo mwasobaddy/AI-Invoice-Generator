@@ -188,7 +188,7 @@ const getDashboardSummary = async (req, res) => {
         return res.status(200).json(parsedData);
     } catch (error) {
         console.error('Error generating dashboard summary:', error);
-        return res.status(500).json({ message: 'Failed to generate dashboard summary', error: error.message });
+        return res.status(500).json({ message: 'Failed to generate dashboard summary', error: error });
     }
 };
 
