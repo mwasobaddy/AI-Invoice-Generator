@@ -15,7 +15,7 @@ app.use(
         origin: [
             'http://localhost:5173',
             'http://localhost:3000',
-            'https://ai-invoice-generator-ddxr.vercel.app',
+            // 'https://ai-invoice-generator-ddxr.vercel.app',
             'https://*.vercel.app'
         ],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -52,3 +52,11 @@ app.get('/', (req, res) => {
 
 // Export for serverless deployment
 module.exports = app;
+
+// Start server if run directly (for local development)
+if (require.main === module) {
+    const PORT = process.env.PORT || 8000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}

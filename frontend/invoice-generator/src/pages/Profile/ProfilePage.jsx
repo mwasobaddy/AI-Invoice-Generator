@@ -19,7 +19,8 @@ const ProfilePage = () => {
     fullName: '',
     email: '',
     businessName: '',
-    address: '',
+    businessAddress: '', // New field for business address
+    address: '', // Now for home address
     phone: '',
   });
 
@@ -29,7 +30,8 @@ const ProfilePage = () => {
         fullName: user.fullName || user.name || '',
         email: user.email || '',
         businessName: user.businessName || '',
-        address: user.address || '',
+        businessAddress: user.businessAddress || '', // Map to businessAddress
+        address: user.address || '', // Home address
         phone: user.phone || '',
       });
     }
@@ -42,8 +44,11 @@ const ProfilePage = () => {
         return !value.trim() ? 'Full name is required' : '';
       case 'businessName':
         return !value.trim() ? 'Business name is required' : '';
+      case 'businessAddress':
+        return !value.trim() ? 'Business address is required' : '';
       case 'address':
-        return !value.trim() ? 'Address is required' : '';
+        // Home address is optional
+        return '';
       case 'phone':
         return !value.trim() ? 'Phone number is required' : 
                !/^\+?[\d\s\-\(\)]+$/.test(value) ? 'Please enter a valid phone number' : '';
@@ -148,7 +153,11 @@ const ProfilePage = () => {
                   <div className="h-12 bg-gray-200 rounded"></div>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-16"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div> {/* New for business address */}
+                  <div className="h-24 bg-gray-200 rounded"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-24"></div> {/* Updated for home address */}
                   <div className="h-24 bg-gray-200 rounded"></div>
                 </div>
                 <div className="space-y-2">
@@ -240,13 +249,27 @@ const ProfilePage = () => {
 
             <div>
               <TextareaField
-                label="Address"
+                label="Business Address"
+                name="businessAddress"
+                value={formData.businessAddress}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                icon={MapPin}
+                placeholder="Enter your business address"
+                rows={4}
+                error={touched.businessAddress ? errors.businessAddress : ''}
+              />
+            </div>
+
+            <div>
+              <TextareaField
+                label="Home Address"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 icon={MapPin}
-                placeholder="Enter your business address"
+                placeholder="Enter your home address (optional)"
                 rows={4}
                 error={touched.address ? errors.address : ''}
               />
