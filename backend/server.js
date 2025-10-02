@@ -15,9 +15,10 @@ app.use(
         origin: [
             'http://localhost:5173',
             'http://localhost:3000',
-            // 'https://ai-invoice-generator-ddxr.vercel.app',
-            'https://*.vercel.app'
-        ],
+            'https://ai-invoice-generator-ddxr.vercel.app',
+            'https://*.vercel.app',
+            process.env.CLIENT_URL // Add dynamic CLIENT_URL from env
+        ].filter(Boolean), // Filter out falsy values
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
         credentials: true,
