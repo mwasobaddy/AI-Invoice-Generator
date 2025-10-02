@@ -199,12 +199,6 @@ const SignUp = () => {
                       </div>
                   </div>
 
-                  {error && <div className="text-red-600 text-sm animate-bounce">{error}</div>}
-                  {success && <div className="text-green-600 text-sm animate-bounce">{success}</div>}
-
-                  {error && <div className="text-red-600 text-sm animate-bounce">{error}</div>}
-                  {success && <div className="text-green-600 text-sm animate-bounce">{success}</div>}
-
                   <div>
                       <button
                           type="submit"
