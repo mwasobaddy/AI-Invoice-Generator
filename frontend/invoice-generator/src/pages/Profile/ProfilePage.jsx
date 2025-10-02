@@ -85,6 +85,12 @@ const ProfilePage = () => {
       ...prev,
       [name]: value
     }));
+    if (touched[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: validateField(name, value)
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -199,27 +205,27 @@ const ProfilePage = () => {
           <div className="space-y-6">
             <div>
               <InputField
-                label="Email Address"
+                label="Email"
                 name="email"
-                type="email"
                 value={formData.email}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 icon={Mail}
-                disabled
-                inputClassName="!bg-gray-50"
+                placeholder="Enter your email"
+                fieldErrors={errors}
+                touched={touched}
               />
-            </div>
-            
-            <div>
+            </div>            <div>
               <InputField
                 label="Full Name"
-                name="fullName"
-                value={formData.fullName}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 icon={User}
                 placeholder="Enter your full name"
-                error={touched.fullName ? errors.fullName : ''}
+                fieldErrors={errors}
+                touched={touched}
               />
             </div>
           </div>
@@ -242,7 +248,8 @@ const ProfilePage = () => {
                 onBlur={handleBlur}
                 icon={Building}
                 placeholder="Enter your business name"
-                error={touched.businessName ? errors.businessName : ''}
+                fieldErrors={errors}
+                touched={touched}
               />
             </div>
 
@@ -256,7 +263,8 @@ const ProfilePage = () => {
                 icon={MapPin}
                 placeholder="Enter your business address"
                 rows={4}
-                error={touched.businessAddress ? errors.businessAddress : ''}
+                fieldErrors={errors}
+                touched={touched}
               />
             </div>
 
@@ -270,7 +278,8 @@ const ProfilePage = () => {
                 icon={MapPin}
                 placeholder="Enter your home address (optional)"
                 rows={4}
-                error={touched.address ? errors.address : ''}
+                fieldErrors={errors}
+                touched={touched}
               />
             </div>
 
@@ -284,7 +293,8 @@ const ProfilePage = () => {
                 onBlur={handleBlur}
                 icon={Phone}
                 placeholder="Enter your phone number"
-                error={touched.phone ? errors.phone : ''}
+                fieldErrors={errors}
+                touched={touched}
               />
             </div>
           </div>
