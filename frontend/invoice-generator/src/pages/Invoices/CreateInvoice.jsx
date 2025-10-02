@@ -582,8 +582,6 @@ const CreateInvoice = () => {
                     <div className="flex justify-between items-center mt-4 text-lg font-bold text-gray-900 border-t pt-4"><span>Total:</span> <span>${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                 </div>
             </div>
-
-            {error && <div className="text-red-600 mb-4">{error}</div>}
         </form>
             )}
         </div>
