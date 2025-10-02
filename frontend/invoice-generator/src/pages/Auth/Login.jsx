@@ -19,6 +19,7 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({ email: null, password: null });
   const [touched, setTouched] = useState({ email: false, password: false });
@@ -38,6 +39,8 @@ const Login = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // clear server messages when user edits
+    setError(null);
+    setSuccess(null);
     if (touched[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
     }
@@ -57,6 +60,7 @@ const Login = () => {
     e.preventDefault();
     setTouched({ email: true, password: true });
     setFieldErrors({ email: validate('email', formData.email), password: validate('password', formData.password) });
+    setError(null);
 
     if (!isFormValid()) return;
 
@@ -71,6 +75,7 @@ const Login = () => {
       setTimeout(() => navigate('/dashboard'), 250);
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.message || 'Failed to login. Please try again.');
       toast.error(err.response?.data?.message || 'Failed to login. Please try again.');
     } finally {
       setLoading(false);
