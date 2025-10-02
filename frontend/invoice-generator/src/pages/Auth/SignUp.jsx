@@ -13,9 +13,8 @@ const SignUp = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [agree, setAgree] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({ name: null, email: null, password: null, confirmPassword: null });
+  const [touched, setTouched] = useState({ name: false, email: false, password: false, confirmPassword: false });
 
   const validate = (name, value) => {
     if (name === 'email') {
@@ -34,6 +33,12 @@ const SignUp = () => {
     return null;
   };
 
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setFieldErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name === 'agree') {
@@ -43,6 +48,9 @@ const SignUp = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError(null);
     setSuccess(null);
+    if (touched[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
+    }
   };
 
   const isFormValid = () => {
@@ -97,7 +105,7 @@ const SignUp = () => {
                   <div className="space-y-6">
                       <div>
                           <label htmlFor="name">Full Name</label>
-                          <div className={`relative rounded-md border border-gray-200 bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
+                          <div className={`relative rounded-md border ${fieldErrors.name && touched.name ? 'border-red-400' : 'border-gray-200'} bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                   <UserCheck className="w-5 h-5" />
                               </div>
@@ -106,14 +114,18 @@ const SignUp = () => {
                                   name="name"
                                   value={formData.name}
                                   onChange={handleChange}
+                                  onBlur={handleBlur}
                                   className="appearance-none block w-full px-4 py-3 pl-12 border-0 focus:outline-none"
                                   placeholder="Enter your full name"
                               />
                           </div>
+                          {fieldErrors.name && touched.name && (
+                              <p className="mt-2 text-sm text-red-500 animate-shake">{fieldErrors.name}</p>
+                          )}
                       </div>
                       <div>
                           <label htmlFor="email">Email</label>
-                          <div className={`relative rounded-md border border-gray-200 bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
+                          <div className={`relative rounded-md border ${fieldErrors.email && touched.email ? 'border-red-400' : 'border-gray-200'} bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                   <Mail className="w-5 h-5" />
                               </div>
@@ -123,14 +135,18 @@ const SignUp = () => {
                                   type="email"
                                   value={formData.email}
                                   onChange={handleChange}
+                                  onBlur={handleBlur}
                                   className="appearance-none block w-full px-4 py-3 pl-12 border-0 focus:outline-none"
                                   placeholder="Enter your email"
                               />
                           </div>
+                          {fieldErrors.email && touched.email && (
+                              <p className="mt-2 text-sm text-red-500 animate-shake">{fieldErrors.email}</p>
+                          )}
                       </div>
                       <div>
                           <label htmlFor="password">Password</label>
-                          <div className={`relative rounded-md border border-gray-200 bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
+                          <div className={`relative rounded-md border ${fieldErrors.password && touched.password ? 'border-red-400' : 'border-gray-200'} bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                   <Lock className="w-5 h-5" />
                               </div>
@@ -140,6 +156,7 @@ const SignUp = () => {
                                   type={showPassword ? 'text' : 'password'}
                                   value={formData.password}
                                   onChange={handleChange}
+                                  onBlur={handleBlur}
                                   className="appearance-none block w-full px-4 py-3 pl-12 border-0 focus:outline-none"
                                   placeholder="Create a password"
                               />
@@ -147,10 +164,13 @@ const SignUp = () => {
                                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                               </button>
                           </div>
+                          {fieldErrors.password && touched.password && (
+                              <p className="mt-2 text-sm text-red-500 animate-shake">{fieldErrors.password}</p>
+                          )}
                       </div>
                       <div>
                           <label htmlFor="confirmPassword">Confirm Password</label>
-                          <div className={`relative rounded-md border border-gray-200 bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
+                          <div className={`relative rounded-md border ${fieldErrors.confirmPassword && touched.confirmPassword ? 'border-red-400' : 'border-gray-200'} bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                   <Lock className="w-5 h-5" />
                               </div>
@@ -160,10 +180,14 @@ const SignUp = () => {
                                   type={showPassword ? 'text' : 'password'}
                                   value={formData.confirmPassword}
                                   onChange={handleChange}
+                                  onBlur={handleBlur}
                                   className="appearance-none block w-full px-4 py-3 pl-12 border-0 focus:outline-none"
                                   placeholder="Confirm your password"
                               />
                           </div>
+                          {fieldErrors.confirmPassword && touched.confirmPassword && (
+                              <p className="mt-2 text-sm text-red-500 animate-shake">{fieldErrors.confirmPassword}</p>
+                          )}
                       </div>
                       <div className="flex items-center">
                           <input id="agree" name="agree" type="checkbox" checked={agree} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />

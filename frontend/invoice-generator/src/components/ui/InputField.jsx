@@ -1,10 +1,11 @@
 import React from 'react'
 
-const InputField = ({ icon: Icon, label, name, inputClassName, error, ...props }) => {
+const InputField = ({ icon: Icon, label, name, inputClassName, error, fieldErrors, touched, ...props }) => {
+  const hasError = fieldErrors && touched && fieldErrors[name] && touched[name];
   return (
     <div>
         <label htmlFor={name} className='block text-sm font-medium text-slate-700 mb-2'>{label}</label>
-        <div className="relative">
+        <div className={`relative rounded-md border ${hasError ? 'border-red-400' : 'border-slate-200'} bg-white transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md`}>
             {Icon && 
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Icon className="w-5 h-5 text-slate-400" />
@@ -13,11 +14,11 @@ const InputField = ({ icon: Icon, label, name, inputClassName, error, ...props }
             <input
                 id={name}
                 name={name}
-                className={`w-full h-10 pr-3 py-2 border rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${Icon ? 'pl-10' : 'pl-3'} ${error ? 'border-red-500' : 'border-slate-200'} ${inputClassName}`}
+                className={`w-full h-10 pr-3 py-2 border-0 bg-transparent text-slate-900 placeholder:text-slate-400 focus:outline-none ${Icon ? 'pl-10' : 'pl-3'} ${inputClassName}`}
                 {...props}
             />
         </div>
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+        {hasError && <p className="mt-1 text-sm text-red-600 animate-shake">{fieldErrors[name]}</p>}
     </div>
   )
 }
