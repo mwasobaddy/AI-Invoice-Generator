@@ -13,6 +13,9 @@ const SignUp = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [agree, setAgree] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({ name: null, email: null, password: null, confirmPassword: null });
   const [touched, setTouched] = useState({ name: false, email: false, password: false, confirmPassword: false });
 
@@ -46,6 +49,8 @@ const SignUp = () => {
       return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setError(null);
+    setSuccess(null);
     if (touched[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
     }
@@ -63,6 +68,7 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
     if (!isFormValid()) {
       toast.error('Please fill in all fields correctly and accept the terms.');
       return;
@@ -82,6 +88,7 @@ const SignUp = () => {
       setTimeout(() => navigate('/dashboard'), 300);
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.message || 'Failed to create account. Please try again.');
       toast.error(err.response?.data?.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
@@ -191,6 +198,9 @@ const SignUp = () => {
                           <label htmlFor="agree" className="ml-2 block text-sm text-gray-600">I agree to the Terms of Service and Privacy Policy</label>
                       </div>
                   </div>
+
+                  {error && <div className="text-red-600 text-sm animate-bounce">{error}</div>}
+                  {success && <div className="text-green-600 text-sm animate-bounce">{success}</div>}
 
                   {error && <div className="text-red-600 text-sm animate-bounce">{error}</div>}
                   {success && <div className="text-green-600 text-sm animate-bounce">{success}</div>}
