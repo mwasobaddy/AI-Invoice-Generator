@@ -69,7 +69,14 @@ const Login = () => {
       const resp = await axios.post(`${API_BASE_URL}/${API_PATHS.AUTH.LOGIN}`, formData, { headers: { 'Content-Type': 'application/json' } });
       const data = resp.data;
       // call context login
-      await login({ name: data.name, email: data.email }, data.token);
+      await login({ 
+        name: data.name, 
+        email: data.email,
+        businessName: data.businessName,
+        businessAddress: data.businessAddress,
+        address: data.address,
+        phone: data.phone
+      }, data.token);
       toast.success('Login successful!');
       // small delay so users can see success message (optional)
       setTimeout(() => navigate('/dashboard'), 250);

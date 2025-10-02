@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
     const isProfileComplete = () => {
         if (!user) return false;
-        return !!(user.businessName && user.address && user.phone);
+        return !!(user.businessName && user.businessAddress && user.address && user.phone);
     }
 
     const value = { user, loading, login, logout, updateUser, isAuthenticated, checkAuthStatus, isProfileComplete };

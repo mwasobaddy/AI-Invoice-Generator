@@ -60,6 +60,7 @@ exports.loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 businessName: user.businessName || '',
+                businessAddress: user.businessAddress || '',
                 address: user.address || '',
                 phone: user.phone || '',
                 token: generateToken(user._id)
