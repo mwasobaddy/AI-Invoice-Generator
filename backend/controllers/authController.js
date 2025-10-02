@@ -84,6 +84,7 @@ exports.getMe = async (req, res) => {
             name: user.name,
             email: user.email,
             businessName: user.businessName || '',
+            businessAddress: user.businessAddress || '',
             address: user.address || '',
             phone: user.phone || ''
         });
@@ -104,6 +105,7 @@ exports.updateUserProfile = async (req, res) => {
             user.name = req.body.name || user.name;
             user.email = req.body.email || user.email;
             user.businessName = req.body.businessName || user.businessName;
+            user.businessAddress = req.body.businessAddress || user.businessAddress;
             user.address = req.body.address || user.address;
             user.phone = req.body.phone || user.phone;
             
@@ -117,6 +119,7 @@ exports.updateUserProfile = async (req, res) => {
                 name: updatedUser.name,
                 email: updatedUser.email,
                 businessName: updatedUser.businessName || '',
+                businessAddress: updatedUser.businessAddress || '',
                 address: updatedUser.address || '',
                 phone: updatedUser.phone || '',
                 token: generateToken(updatedUser._id)

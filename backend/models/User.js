@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
     businessName: {
         type: String,
     },
-    BusinessAddress: {
+    businessAddress: {
         type: String,
         default: '',
     },

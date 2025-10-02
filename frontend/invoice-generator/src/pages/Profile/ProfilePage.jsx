@@ -16,7 +16,7 @@ const ProfilePage = () => {
   const [touched, setTouched] = useState({});
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
     email: '',
     businessName: '',
     businessAddress: '', // New field for business address
@@ -27,7 +27,7 @@ const ProfilePage = () => {
   useEffect(() => {
     if (user) {
       setFormData({
-        fullName: user.fullName || user.name || '',
+        name: user.name || '',
         email: user.email || '',
         businessName: user.businessName || '',
         businessAddress: user.businessAddress || '', // Map to businessAddress
@@ -37,10 +37,9 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  // Validation functions
   const validateField = (name, value) => {
     switch (name) {
-      case 'fullName':
+      case 'name':
         return !value.trim() ? 'Full name is required' : '';
       case 'businessName':
         return !value.trim() ? 'Business name is required' : '';
@@ -214,13 +213,13 @@ const ProfilePage = () => {
             <div>
               <InputField
                 label="Full Name"
-                name="fullName"
-                value={formData.fullName}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 icon={User}
                 placeholder="Enter your full name"
-                error={touched.fullName ? errors.fullName : ''}
+                error={touched.name ? errors.name : ''}
               />
             </div>
           </div>
