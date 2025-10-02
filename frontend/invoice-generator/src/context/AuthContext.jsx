@@ -14,10 +14,19 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [shouldRedirectAfterLogout, setShouldRedirectAfterLogout] = useState(false);
 
     useEffect(() => {
         checkAuthStatus();
     }, []);
+
+    // Handle logout redirect
+    useEffect(() => {
+        if (shouldRedirectAfterLogout && !isAuthenticated) {
+            setShouldRedirectAfterLogout(false);
+            window.location.replace('/');
+        }
+    }, [shouldRedirectAfterLogout, isAuthenticated]);
 
     const checkAuthStatus = async () => {
         try {
@@ -47,13 +56,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
+        // Clear authentication data
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
 
+        // Update state
         setUser(null);
         setIsAuthenticated(false);
-        window.location.href = '/';
+        
+        // Set flag to redirect after state update
+        setShouldRedirectAfterLogout(true);
     };
 
     const updateUser = (updatedUser) => {

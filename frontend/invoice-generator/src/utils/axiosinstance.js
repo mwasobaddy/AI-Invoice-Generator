@@ -30,7 +30,25 @@ axiosInstance.interceptors.response.use(
         return response;
     },
     (error) => {
-        // Handle 401 Unauthorized errors
+        // Handle 401 Unauthorized errors (session expired)
+        if (error.response && error.response.status === 401) {
+            // Clear authentication data
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            
+            // Show error toast and redirect to login
+            if (window.location.pathname !== '/login') {
+                // Import toast dynamically to avoid circular imports
+                import('react-hot-toast').then(({ toast }) => {
+                    toast.error('Your session has expired. Please login again.');
+                });
+                window.location.href = '/login';
+            }
+            return Promise.reject(error);
+        }
+        
+        // Handle other errors
         if (error.response) {
             if (error.response.status === 500) {
                 console.error("Server error. Please try again later")
