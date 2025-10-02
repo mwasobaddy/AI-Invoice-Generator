@@ -17,6 +17,7 @@ app.use(
             'http://localhost:3000',
             'https://ai-invoice-generator-ddxr.vercel.app',
             'https://*.vercel.app',
+            'https://ai-invoice-generator-backend.onrender.com',
             process.env.CLIENT_URL // Add dynamic CLIENT_URL from env
         ].filter(Boolean), // Filter out falsy values
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
