@@ -46,8 +46,6 @@ const SignUp = () => {
       return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setError(null);
-    setSuccess(null);
     if (touched[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
     }
@@ -65,7 +63,6 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
     if (!isFormValid()) {
       toast.error('Please fill in all fields correctly and accept the terms.');
       return;

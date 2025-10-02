@@ -19,7 +19,6 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({ email: null, password: null });
   const [touched, setTouched] = useState({ email: false, password: false });
@@ -39,8 +38,6 @@ const Login = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // clear server messages when user edits
-    setError(null);
-    setSuccess(null);
     if (touched[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
     }
@@ -58,7 +55,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
     setTouched({ email: true, password: true });
     setFieldErrors({ email: validate('email', formData.email), password: validate('password', formData.password) });
 

@@ -213,13 +213,13 @@ const ProfilePage = () => {
             <div>
               <InputField
                 label="Full Name"
-                name="name"
-                value={formData.name}
+                name="fullName"
+                value={formData.fullName}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 icon={User}
                 placeholder="Enter your full name"
-                error={touched.name ? errors.name : ''}
+                error={touched.fullName ? errors.fullName : ''}
               />
             </div>
           </div>

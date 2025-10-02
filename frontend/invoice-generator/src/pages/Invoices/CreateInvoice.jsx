@@ -54,7 +54,6 @@ const CreateInvoice = () => {
     });
     const [loading, setLoading] = useState(false);
     const [isGeneratingNumber, setIsGeneratingNumber] = useState(false);
-    const [error, setError] = useState(null);
 
     // Field-level validation state
     const [fieldErrors, setFieldErrors] = useState({});
@@ -310,7 +309,6 @@ const CreateInvoice = () => {
     // Submit
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(null);
         // Mark all fields as touched
         setTouched(prev => ({
             ...prev,

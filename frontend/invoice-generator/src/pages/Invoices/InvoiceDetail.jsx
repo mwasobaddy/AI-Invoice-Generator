@@ -13,7 +13,6 @@ const InvoiceDetail = () => {
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showReminderModal, setShowReminderModal] = useState(false);
 
   useEffect(() => {
