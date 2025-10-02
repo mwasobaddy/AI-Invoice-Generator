@@ -54,7 +54,7 @@ const parseInvoiceFromText = async (req, res) => {
 
         // Use the correct API for @google/genai
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-1.5-pro',
             contents: prompt,
         });
         const responseText = response.text;
@@ -116,7 +116,7 @@ const generateReminderEmail = async (req, res) => {
         `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-1.5-pro',
             contents: prompt,
         });
         
@@ -179,7 +179,7 @@ const getDashboardSummary = async (req, res) => {
         `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-1.5-pro',
             contents: prompt,
         });
         const responseText = response.text;
