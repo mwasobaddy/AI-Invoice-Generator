@@ -13,6 +13,7 @@ const InvoiceDetail = () => {
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showReminderModal, setShowReminderModal] = useState(false);
 
   useEffect(() => {
@@ -21,11 +22,13 @@ const InvoiceDetail = () => {
 
   const fetchInvoice = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await axiosInstance.get(API_PATHS.INVOICE.GET_INVOICES_BY_ID(id));
       setInvoice(response.data);
-    } catch (error) {
-      console.error('Error fetching invoice:', error);
+    } catch (err) {
+      console.error('Error fetching invoice:', err);
+      setError(err);
       toast.error('Failed to load invoice');
     } finally {
       setLoading(false);
